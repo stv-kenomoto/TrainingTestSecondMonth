@@ -44,10 +44,10 @@ static const NSInteger footerViewHeight = 60;
 #pragma mark - Action
 
 - (IBAction)didTouchRefresh:(id)sender {
-    [self.hotPepperAPI fetchGotandaGourmet];
     [self hideTableView];
     [self showIndicator];
     [self hideErrorView];
+    [self.hotPepperAPI fetchGotandaGourmet];
 }
 
 - (void)didTouchFooterRefresh:(id)sender {
