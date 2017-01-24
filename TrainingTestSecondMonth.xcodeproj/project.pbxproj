@@ -622,7 +622,7 @@
 				DEVELOPMENT_TEAM = 9F2YGPLR2J;
 				INFOPLIST_FILE = "$(SRCROOT)/TrainingTestSecondMonth/Resources/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.enomt.TrainingTestSecondMonth;
+				PRODUCT_BUNDLE_IDENTIFIER = com.enomt.TrainingTestThirdMonth;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -635,7 +635,7 @@
 				DEVELOPMENT_TEAM = 9F2YGPLR2J;
 				INFOPLIST_FILE = "$(SRCROOT)/TrainingTestSecondMonth/Resources/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.enomt.TrainingTestSecondMonth;
+				PRODUCT_BUNDLE_IDENTIFIER = com.enomt.TrainingTestThirdMonth;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

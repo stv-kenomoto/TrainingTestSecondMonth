@@ -11,7 +11,7 @@
 #import "HotPepperAPI.h"
 #import "UIImage+ImageNamed.h"
 
-static const NSInteger footerViewHeight = 50;
+static const NSInteger footerViewHeight = 60;
 
 @interface GotandaViewController () <HotPepperAPIDelegate, UITableViewDelegate>
 
@@ -19,14 +19,18 @@ static const NSInteger footerViewHeight = 50;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *indicatorView;
 @property (weak, nonatomic) IBOutlet UIButton *refreshButton;
 @property (weak, nonatomic) IBOutlet UILabel *errorLabel;
+
 @property (strong, nonatomic) UIActivityIndicatorView *footerIndicatorView;
 @property (strong, nonatomic) UIButton *footerRefreshButton;
-@property (strong, nonatomic) GotandaViewDataSource *dataSource;
-@property (strong, nonatomic) HotPepperAPI *api;
+
+@property (strong, nonatomic) GotandaViewDataSource *gotandaViewDataSource;
+@property (strong, nonatomic) HotPepperAPI *hotPepperAPI;
 
 @end
 
 @implementation GotandaViewController
+
+#pragma mark - Lifecycle
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -34,11 +38,13 @@ static const NSInteger footerViewHeight = 50;
     [self setupFooterIndicatorView];
     [self setupFooterRefreshButton];
     [self setupAPI];
-    [self.api fetchGotandaGourmet];
+    [self.hotPepperAPI fetchGotandaGourmet];
 }
 
+#pragma mark - Action
+
 - (IBAction)didTouchRefresh:(id)sender {
-    [self.api fetchGotandaGourmet];
+    [self.hotPepperAPI fetchGotandaGourmet];
     [self hideTableView];
     [self showIndicator];
     [self hideErrorView];
@@ -47,11 +53,19 @@ static const NSInteger footerViewHeight = 50;
 - (void)didTouchFooterRefresh:(id)sender {
     [self hideFooterRefreshButton];
     [self showFooterIndicatorView];
-    [self.api addGotandaGourmet];
+    [self.hotPepperAPI addGotandaGourmet];
 }
 
 - (void)didValueChangedRefreshControl:(id)sender {
-    [self.api fetchGotandaGourmet];
+    [self.hotPepperAPI fetchGotandaGourmet];
+}
+
+#pragma mark - Private
+
+- (CGRect)footerFrame {
+    CGRect footerFrame = self.tableView.tableFooterView.frame;
+    footerFrame.size.height += footerViewHeight;
+    return footerFrame;
 }
 
 - (void)setupTableView {
@@ -76,8 +90,8 @@ static const NSInteger footerViewHeight = 50;
 }
 
 - (void)setupAPI {
-    self.api = [[HotPepperAPI alloc] init];
-    self.api.delegate = self;
+    self.hotPepperAPI = [[HotPepperAPI alloc] init];
+    self.hotPepperAPI.delegate = self;
 }
 
 - (void)showTableView {
@@ -130,16 +144,9 @@ static const NSInteger footerViewHeight = 50;
     self.errorLabel.hidden = YES;
 }
 
-- (CGRect)footerFrame {
-    CGRect footerFrame = self.tableView.tableFooterView.frame;
-    footerFrame.size.height += footerViewHeight;
-    return footerFrame;
-}
-
-#pragma mark - HotPepperAPIDelegate
--(void)hotPepperAPI:(HotPepperAPI *)hotPepperAPI fetchResponse:(NSArray<Gourmet *> *)fetchResponse {
-    self.dataSource = [[GotandaViewDataSource alloc] initWithGourmets:fetchResponse];
-    self.tableView.dataSource = self.dataSource;
+- (void)renderTableViewWithGourmets:(NSArray<Gourmet *> *)gourmets {
+    self.gotandaViewDataSource = [[GotandaViewDataSource alloc] initWithGourmets:gourmets];
+    self.tableView.dataSource = self.gotandaViewDataSource;
     [self.tableView reloadData];
     [self showTableView];
     [self hideIndicator];
@@ -150,7 +157,13 @@ static const NSInteger footerViewHeight = 50;
     }
 }
 
-- (void)hotPepperAPI:(HotPepperAPI *)hotPepperAPI fetchError:(NSError *)fetchError {
+- (void)updateTableViewWithGourmets:(NSArray<Gourmet *> *)gourmets {
+    [self hideFooterIndicatorView];
+    self.gotandaViewDataSource.gourmets = [[self.gotandaViewDataSource.gourmets arrayByAddingObjectsFromArray:gourmets] mutableCopy];
+    [self.tableView reloadData];
+}
+
+- (void)showError {
     if ([self.tableView.refreshControl isRefreshing]) {
         [self.tableView.refreshControl endRefreshing];
     }else {
@@ -160,15 +173,26 @@ static const NSInteger footerViewHeight = 50;
     }
 }
 
-- (void)hotPepperAPI:(HotPepperAPI *)hotPepperAPI addResponse:(NSArray<Gourmet *> *)addResponse {
+- (void)showFooterError {
     [self hideFooterIndicatorView];
-    self.dataSource.gourmets = [[self.dataSource.gourmets arrayByAddingObjectsFromArray:addResponse] mutableCopy];
-    [self.tableView reloadData];
+    [self showFooterRefreshButton];
+}
+
+#pragma mark - HotPepperAPIDelegate
+-(void)hotPepperAPI:(HotPepperAPI *)hotPepperAPI fetchResponse:(NSArray<Gourmet *> *)fetchResponse {
+    [self renderTableViewWithGourmets:fetchResponse];
+}
+
+- (void)hotPepperAPI:(HotPepperAPI *)hotPepperAPI fetchError:(NSError *)fetchError {
+    [self showError];
+}
+
+- (void)hotPepperAPI:(HotPepperAPI *)hotPepperAPI addResponse:(NSArray<Gourmet *> *)addResponse {
+    [self updateTableViewWithGourmets:addResponse];
 }
 
 - (void)hotPepperAPI:(HotPepperAPI *)hotPepperAPI addError:(NSError *)addError {
-    [self hideFooterIndicatorView];
-    [self showFooterRefreshButton];
+    [self showFooterError];
 }
 
 - (void)hotPepperAPI:(HotPepperAPI *)hotPepperAPI overResultAvailable:(NSInteger)overResultAvailable {
@@ -187,7 +211,7 @@ static const NSInteger footerViewHeight = 50;
         }
 
         [self showFooterIndicatorView];
-        [self.api addGotandaGourmet];
+        [self.hotPepperAPI addGotandaGourmet];
     }
 }
 
